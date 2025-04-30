@@ -107,8 +107,8 @@ const updateOrderStatus = async (req, res) => {
     }
     }
 
-// function to view order i made myself
-const getSelfOrders = async (req, res) => {
+// function to view orders count by customer
+const getSelfOrderscount = async (req, res) => {
     try {
         const { userId } = req.params;
         const orders = await Order.count({ where: { customerId: userId }, include: [OrderProduct] });
@@ -117,6 +117,33 @@ const getSelfOrders = async (req, res) => {
     } catch (error) {
         console.error('message:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+}
+
+//function to view order i made as a customer with products name not id
+
+const getselfOrders = async (req, res) =>{
+    try{
+        const {userId} = req.params;
+        const orders = await Order.findAll({
+            where: { customerId: userId },
+            include: [
+                {
+                    model: OrderProduct,
+                    include: [
+                        {
+                            model: Product,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        if (!orders) return res.status(404).json({message: 'No order found for this user'});
+        res.status(200).json(orders);
+    }catch (error){
+        console.error('Error message: ', error);
+        res.status(500).json({message: 'Internal Server Error: ', error: error.message});
     }
 }
 
@@ -167,6 +194,33 @@ const getPendingOrderCount = async (req, res) => {
         res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }
+// cancel order by customer
+const orderCancel = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const order = await Order.findByPk(orderId);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if (order.status === 'cancelled') return res.status(400).json({ message: 'Order already cancelled' });
+        
+        order.status = 'cancelled';
+        await order.save();
+        
+        res.status(200).json({ message: 'Order cancelled successfully', order });
+    } catch (error) {
+        console.error('message:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+}
   
 
-module.exports = { createOrder, getOrders, getOrderById, updateOrderStatus, getOrderCount, getSelfOrders, getMyOrders, getMyOrderCount, getPendingOrderCount };
+module.exports = { createOrder, 
+    getOrders, 
+    getOrderById, 
+    updateOrderStatus, 
+    getOrderCount, 
+    getselfOrders, 
+    getSelfOrderscount, 
+    getMyOrders, 
+    getMyOrderCount, 
+    getPendingOrderCount, 
+    orderCancel };
