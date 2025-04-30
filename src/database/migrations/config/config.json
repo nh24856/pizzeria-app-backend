@@ -1,0 +1,10 @@
+{
+    "development": {
+        "username": "postgres",
+        "password": "admin",
+        "database": "pizzeriaDB",
+        "host": "localhost",
+        "dialect": "postgres",
+        "logging": false
+    }
+}
